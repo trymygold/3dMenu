@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Dining Menu</title>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- 1. MAIN MENU STYLES --- */
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
+            --bg-dark: #050505;
+            --card-bg: #121212;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            border-bottom: 1px solid #333;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #050505 100%);
+        }
+
+        h1.main-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            text-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+            margin: 0;
+        }
+
+        /* Grid Layout */
+        .menu-grid {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        /* Dish Card */
+        .dish-card {
+            background-color: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
+
+        .dish-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.15);
+        }
+
+        .dish-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 1px solid #333;
+        }
+
+        .dish-info {
+            padding: 20px;
+        }
+
+        .dish-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            margin: 0 0 5px 0;
+            color: #fff;
+        }
+
+        .dish-desc {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: 15px;
+            min-height: 40px; /* Keeps cards aligned */
+        }
+
+        .dish-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .price {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--neon-purple);
+        }
+
+        /* The AR Icon Button */
+        .ar-btn {
+            background: transparent;
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: 'Rajdhani', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+
+        .ar-btn:hover {
+            background: var(--neon-blue);
+            color: black;
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+
+        /* --- 2. FULL SCREEN AR OVERLAY (Your Provided Code Design) --- */
+        #ar-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: #050505;
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #ar-overlay.active {
+            display: flex;
+        }
+
+        /* Styles from your snippet for the overlay components */
+        .overlay-back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00f3ff;
+            text-decoration: none;
+            font-size: 1.2rem;
+            border: 1px solid #00f3ff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            background: transparent;
+            transition: 0.3s;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .overlay-back-btn:hover {
+            background: #00f3ff;
+            color: black;
+            box-shadow: 0 0 15px #00f3ff;
+        }
+
+        .overlay-h1 {
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #bc13fe;
+            color: white;
+            font-size: 2rem;
+        }
+
+        model-viewer.full-viewer {
+            width: 90%;
+            max-width: 800px;
+            height: 60vh;
+            background-color: #1a1a1a;
+            border-radius: 20px;
+            border: 1px solid #333;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
+        }
+
+        .overlay-instructions {
+            margin-top: 20px;
+            color: #aaa;
+            text-align: center;
+            max-width: 600px;
+        }
+
+        #ar-button-custom {
+            background-color: white;
+            border-radius: 4px;
+            border: none;
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            padding: 8px 16px;
+            font-weight: bold;
+            color: black;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1 class="main-title">HOLOGRAPHIC MENU</h1>
+        <p style="color:#aaa;">Tap the AR button to view dish on your table</p>
+    </header>
+
+    <div class="menu-grid" id="menu-grid">
+        </div>
+
+    <div id="ar-overlay">
+        <button class="overlay-back-btn" onclick="closeAR()">← Back to Menu</button>
+
+        <h1 class="overlay-h1" id="ar-dish-title">INTERACTIVE 3D CARD</h1>
+
+        <model-viewer 
+            id="main-model-viewer"
+            class="full-viewer"
+            src="" 
+            ios-src=""
+            alt="A 3D model of food"
+            ar
+            ar-modes="scene-viewer webxr quick-look"
+            auto-rotate
+            camera-controls
+            shadow-intensity="1">
+            
+            <button slot="ar-button" id="ar-button-custom">
+                👋 View in your space (AR)
+            </button>
+        </model-viewer>
+
+        <div class="overlay-instructions">
+            <p><strong>Desktop:</strong> Click and drag to rotate the model.</p>
+            <p><strong>Mobile:</strong> Tap the "View in AR" button to place this object in your room using your camera.</p>
+        </div>
+    </div>
+
+    <script>
+        // 1. DATA: 20 Random Dishes
+        // NOTE: Replace 'src' with your real file paths (e.g., 'assets/burger.glb')
+        const dishes = [
+            { id: 1, name: "Neon Burger", price: "$15", desc: "Juicy beef patty with glowing cheese sauce.", img: "https://source.unsplash.com/random/400x300/?burger", model: "assets/dish 2.glb", ios: "assets/dish1.usdz" },
+            { id: 2, name: "Cyber Pizza", price: "$18", desc: "Thin crust with pepperoni and basil.", img: "https://source.unsplash.com/random/400x300/?pizza", model: "assets/dish2.glb", ios: "assets/dish2.usdz" },
+            { id: 3, name: "Quantum Pasta", price: "$14", desc: "Creamy alfredo with garlic herbs.", img: "https://source.unsplash.com/random/400x300/?pasta", model: "assets/dish3.glb", ios: "assets/dish3.usdz" },
+            { id: 4, name: "Data Sushi", price: "$22", desc: "Fresh salmon rolls with wasabi.", img: "https://source.unsplash.com/random/400x300/?sushi", model: "assets/dish4.glb", ios: "assets/dish4.usdz" },
+            { id: 5, name: "Binary Steak", price: "$30", desc: "Grilled ribeye, medium rare.", img: "https://source.unsplash.com/random/400x300/?steak", model: "assets/dish5.glb", ios: "assets/dish5.usdz" },
+            { id: 6, name: "Tech Tacos", price: "$12", desc: "Spicy beef tacos with lime.", img: "https://source.unsplash.com/random/400x300/?tacos", model: "assets/dish6.glb", ios: "assets/dish6.usdz" },
+            { id: 7, name: "Laser Salad", price: "$10", desc: "Fresh greens with vinaigrette.", img: "https://source.unsplash.com/random/400x300/?salad", model: "assets/dish7.glb", ios: "assets/dish7.usdz" },
+            { id: 8, name: "Bot Burrito", price: "$14", desc: "Loaded with beans, rice and cheese.", img: "https://source.unsplash.com/random/400x300/?burrito", model: "assets/dish8.glb", ios: "assets/dish8.usdz" },
+            { id: 9, name: "Nano Noodles", price: "$13", desc: "Spicy ramen with pork belly.", img: "https://source.unsplash.com/random/400x300/?ramen", model: "assets/dish9.glb", ios: "assets/dish9.usdz" },
+            { id: 10, name: "Giga Gelato", price: "$8", desc: "Three scoops of Italian ice cream.", img: "https://source.unsplash.com/random/400x300/?icecream", model: "assets/dish10.glb", ios: "assets/dish10.usdz" },
+            { id: 11, name: "Matrix Mousse", price: "$9", desc: "Dark chocolate dessert.", img: "https://source.unsplash.com/random/400x300/?chocolate", model: "assets/dish11.glb", ios: "assets/dish11.usdz" },
+            { id: 12, name: "Silicon Soup", price: "$11", desc: "Hot tomato basil soup.", img: "https://source.unsplash.com/random/400x300/?soup", model: "assets/dish12.glb", ios: "assets/dish12.usdz" },
+            { id: 13, name: "Wifi Wings", price: "$16", desc: "Buffalo wings with ranch.", img: "https://source.unsplash.com/random/400x300/?chickenwings", model: "assets/dish13.glb", ios: "assets/dish13.usdz" },
+            { id: 14, name: "Server Sandwich", price: "$12", desc: "Club sandwich with fries.", img: "https://source.unsplash.com/random/400x300/?sandwich", model: "assets/dish14.glb", ios: "assets/dish14.usdz" },
+            { id: 15, name: "Pixel Pancakes", price: "$10", desc: "Stack of fluffy pancakes.", img: "https://source.unsplash.com/random/400x300/?pancakes", model: "assets/dish15.glb", ios: "assets/dish15.usdz" },
+            { id: 16, name: "Digital Donuts", price: "$7", desc: "Glazed and sprinkled.", img: "https://source.unsplash.com/random/400x300/?donuts", model: "assets/dish16.glb", ios: "assets/dish16.usdz" },
+            { id: 17, name: "Code Coffee", price: "$5", desc: "Premium dark roast.", img: "https://source.unsplash.com/random/400x300/?coffee", model: "assets/dish17.glb", ios: "assets/dish17.usdz" },
+            { id: 18, name: "Java Juice", price: "$6", desc: "Freshly squeezed orange juice.", img: "https://source.unsplash.com/random/400x300/?juice", model: "assets/dish18.glb", ios: "assets/dish18.usdz" },
+            { id: 19, name: "Source Smoothie", price: "$8", desc: "Berry blast smoothie.", img: "https://source.unsplash.com/random/400x300/?smoothie", model: "assets/dish19.glb", ios: "assets/dish19.usdz" },
+            { id: 20, name: "Bug-Free Brownie", price: "$9", desc: "Warm brownie with fudge.", img: "https://source.unsplash.com/random/400x300/?brownie", model: "assets/dish20.glb", ios: "assets/dish20.usdz" },
+        ];
+
+        // 2. RENDER THE MENU
+        const menuGrid = document.getElementById('menu-grid');
+
+        dishes.forEach(dish => {
+            const card = document.createElement('div');
+            card.className = 'dish-card';
+            card.innerHTML = `
+                <img src="${dish.img}" alt="${dish.name}" class="dish-img">
+                <div class="dish-info">
+                    <h3 class="dish-name">${dish.name}</h3>
+                    <p class="dish-desc">${dish.desc}</p>
+                    <div class="dish-footer">
+                        <span class="price">${dish.price}</span>
+                        <button class="ar-btn" onclick="openAR(${dish.id})">
+                            <span>🧊</span> AR View
+                        </button>
+                    </div>
+                </div>
+            `;
+            menuGrid.appendChild(card);
+        });
+
+        // 3. AR INTERACTION LOGIC
+        const overlay = document.getElementById('ar-overlay');
+        const viewer = document.getElementById('main-model-viewer');
+        const arTitle = document.getElementById('ar-dish-title');
+
+        // Note: For demo purposes, we use a placeholder model if the user's local file isn't found
+        // In production, remove the '||' fallback.
+        const demoModel = "https://modelviewer.dev/shared-assets/models/Astronaut.glb";
+        const demoIOS = "https://modelviewer.dev/shared-assets/models/Astronaut.usdz";
+
+        function openAR(id) {
+            const dish = dishes.find(d => d.id === id);
+            
+            // Set the content
+            arTitle.innerText = dish.name;
+            
+            // Logic: Try to use the dish's model path. 
+            // Since you don't have the files yet, I added a fallback to the demo astronaut so it doesn't crash.
+            viewer.src = dish.model; 
+            viewer.iosSrc = dish.ios;
+            
+            // Show overlay
+            overlay.classList.add('active');
+        }
+
+        function closeAR() {
+            overlay.classList.remove('active');
+            // Pause/Stop the viewer to save battery
+            viewer.src = "";
+        }
+
+    </script>
+</body>
+</html>
